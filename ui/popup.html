@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>Відмови постачальників</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; width: 620px; margin: 0; padding: 14px; }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 7px 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { text-align: right; }
+    .actions { margin-top: 12px; display: flex; gap: 8px; }
+    button { padding: 7px 12px; cursor: pointer; }
+    .empty { padding: 18px 0; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Відмови постачальників</h1>
+  <div id="summary"></div>
+  <table>
+    <thead>
+      <tr><th>Назва</th><th>Код Моріона</th><th>К-сть</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="actions">
+    <button id="copy">Скопіювати</button>
+    <button id="clear">Очистити</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
