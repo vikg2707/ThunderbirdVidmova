@@ -1,0 +1,33 @@
+{
+  "manifest_version": 2,
+  "name": "ThunderbirdVidmova",
+  "description": "Автоматичний збір відмов постачальників із відповідей на замовлення.",
+  "version": "0.1.0",
+  "applications": {
+    "gecko": {
+      "id": "thunderbird-vidmova@algofarm.site",
+      "strict_min_version": "115.0"
+    }
+  },
+  "permissions": [
+    "messagesRead",
+    "messagesModify",
+    "accountsRead",
+    "storage",
+    "clipboardWrite"
+  ],
+  "background": {
+    "scripts": [
+      "background/storage.js",
+      "background/normalizer.js",
+      "background/matcher.js",
+      "background/parser.js",
+      "background/mail-monitor.js",
+      "background/background.js"
+    ]
+  },
+  "browser_action": {
+    "default_title": "Відмови постачальників",
+    "default_popup": "ui/popup.html"
+  }
+}
