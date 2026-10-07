@@ -1,63 +1,6 @@
-async function findOrderForMessage(message) {
-  const orders = await VDStorage.getOrders();
-  if (!message) return null;
-
-  const subject = (message.subject || "").toLowerCase();
-  const from = (message.author || "").toLowerCase();
-
-  let candidates = orders.filter(order => {
-    const orderSubject = (order.subject || "").toLowerCase();
-    const supplier = (order.supplier || "").toLowerCase();
-    return (
-      (orderSubject && subject.includes(orderSubject)) ||
-      (supplier && from.includes(supplier))
-    );
-  });
-
-  if (!candidates.length) candidates = orders;
-
-  candidates.sort((a, b) => {
-    const ad = Math.abs(new Date(message.date) - new Date(a.date));
-    const bd = Math.abs(new Date(message.date) - new Date(b.date));
-    return ad - bd;
-  });
-
-  return candidates[0] || null;
-}
-
-async function processReply(message, text) {
-  if (await VDStorage.isMessageProcessed(message.id)) return null;
-
-  const order = await findOrderForMessage(message);
-  if (!order) return null;
-
-  const parsed = VDParser.parseReplyText(text);
-  const changes = [];
-
-  for (const row of parsed) {
-    const match = VDMatcher.matchProduct(row.name, order.items);
-    if (!match.matched) continue;
-
-    const item = match.item;
-    const refused = Math.max(
-      0,
-      Number(item.orderedQuantity) - Number(row.confirmedQuantity || 0)
-    );
-
-    if (refused <= 0) continue;
-
-    changes.push({
-      orderId: order.orderId,
-      morionCode: item.morionCode,
-      name: item.name,
-      refusedQuantity: refused,
-      matchedName: row.name,
-      confidence: match.score
-    });
-  }
-
-  await VDStorage.markMessageProcessed(message.id, order.orderId, changes);
-  return changes;
-}
-
-globalThis.VDMailMonitor = { findOrderForMessage, processReply };
+function h(hs,n){const k=Object.keys(hs||{}).find(x=>x.toLowerCase()===n.toLowerCase());return k?(hs[k]||[]).join(" "):""}
+async function findOrderForMessage(m){const orders=await VDStorage.getOrders();if(!orders.length)return null;let hs={};try{hs=await browser.messages.getHeaders(m.id,{decodeHeaders:true})}catch(_){}const ir=h(hs,"In-Reply-To"),refs=h(hs,"References"),sub=String(m.subject||"").toLowerCase(),author=String(m.author||"").toLowerCase();let best=null;for(const o of orders){let s=0;if(o.messageId&&(ir.includes(o.messageId)||refs.includes(o.messageId)))s+=100;const os=String(o.subject||"").toLowerCase(),sp=String(o.supplier||"").toLowerCase();if(os&&sub.includes(os))s+=35;if(sp&&author.includes(sp))s+=25;const hrs=Math.abs(new Date(m.date)-new Date(o.date))/3600000;if(hrs<=24)s+=20;else if(hrs<=72)s+=10;if(!best||s>best.score)best={order:o,score:s}}return best&&best.score>=25?best.order:null}
+async function extractMessageText(id){const c=[];for(const p of await browser.messages.listInlineTextParts(id)||[])if(p.content)c.push(p.content);for(const a of await browser.messages.listAttachments(id)||[]){if(!/\.(txt|csv|xlsx|xls)$/i.test(String(a.name||"")))continue;try{const f=await browser.messages.getAttachmentFile(id,a.partName);c.push(await f.text())}catch(e){console.warn("Attachment read failed",a.name,e)}}return c.join("\n")}
+async function upsertRefusals(ch){const map=new Map((await VDStorage.getRefusals()).map(x=>[String(x.orderId)+"|"+String(x.morionCode),x]));for(const x of ch){const k=String(x.orderId)+"|"+String(x.morionCode),o=map.get(k),now=new Date().toISOString();if(o){o.refusedQuantity=x.refusedQuantity;o.lastUpdated=now;o.confidence=x.confidence;o.matchedName=x.matchedName}else map.set(k,{...x,firstSeen:now,lastUpdated:now})}const r=[...map.values()].filter(x=>Number(x.refusedQuantity)>0);await VDStorage.saveRefusals(r);return r}
+async function processReplyMessage(m){if(await VDStorage.isMessageProcessed(m.id))return[];const o=await findOrderForMessage(m);if(!o)return[];const parsed=VDParser.parseReplyText(await extractMessageText(m.id)),ch=[];for(const row of parsed){const mt=VDMatcher.matchProduct(row.name,o.items);if(!mt.matched)continue;const i=mt.item,ord=Number(i.orderedQuantity)||0,conf=Math.min(ord,Math.max(0,Number(row.confirmedQuantity)||0)),ref=Math.max(0,ord-conf);if(ref>0)ch.push({orderId:o.orderId,morionCode:i.morionCode,name:i.name,refusedQuantity:ref,matchedName:row.name,confidence:mt.score})}await VDStorage.markMessageProcessed(m.id,o.orderId,ch);if(ch.length)await upsertRefusals(ch);return ch}
+globalThis.VDMailMonitor={findOrderForMessage,extractMessageText,processReplyMessage};
