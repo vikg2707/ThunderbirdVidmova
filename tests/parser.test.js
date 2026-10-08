@@ -257,3 +257,31 @@ test("Morion code normalization matches separator variants",()=>{
   assert.equal(x.matched,true);
   assert.equal(x.confidence,"code");
 });
+
+
+test("supplier alias conflict needs two observations before switching",async()=>{
+  const vm=require("node:vm");
+  const supplier=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","supplier.js"),"utf8");
+  const state=[{key:"supplier@test",aliases:{}}];
+  const ctx={VDStorage:{getSuppliers:async()=>state,upsertSupplier:async p=>Object.assign(state[0],p)},VDNormalizer:{normalizeProductName:x=>String(x).toLowerCase()}};
+  vm.createContext(ctx);vm.runInContext(supplier,ctx);
+  const order={supplier:"Supplier <supplier@test>",items:[{name:"A",morionCode:"100"},{name:"B",morionCode:"200"}]};
+  await ctx.VDSupplier.learnAlias(order,"Товар",order.items[0],"exact");
+  await ctx.VDSupplier.learnAlias(order,"Товар",order.items[1],"exact");
+  assert.equal(state[0].aliases["товар"].morionCode,"100");
+  assert.equal(state[0].aliases["товар"].candidateMorionCode,"200");
+  await ctx.VDSupplier.learnAlias(order,"Товар",order.items[1],"exact");
+  assert.equal(state[0].aliases["товар"].morionCode,"200");
+});
+
+test("manual alias conflict switches immediately",async()=>{
+  const vm=require("node:vm");
+  const supplier=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","supplier.js"),"utf8");
+  const state=[{key:"supplier@test",aliases:{}}];
+  const ctx={VDStorage:{getSuppliers:async()=>state,upsertSupplier:async p=>Object.assign(state[0],p)},VDNormalizer:{normalizeProductName:x=>String(x).toLowerCase()}};
+  vm.createContext(ctx);vm.runInContext(supplier,ctx);
+  const order={supplier:"Supplier <supplier@test>",items:[{name:"A",morionCode:"100"},{name:"B",morionCode:"200"}]};
+  await ctx.VDSupplier.learnAlias(order,"Товар",order.items[0],"exact");
+  await ctx.VDSupplier.learnAlias(order,"Товар",order.items[1],"manual");
+  assert.equal(state[0].aliases["товар"].morionCode,"200");
+});
