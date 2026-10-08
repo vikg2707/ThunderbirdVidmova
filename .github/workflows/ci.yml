@@ -1,0 +1,43 @@
+name: ThunderbirdVidmova
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+      - name: Validate manifest JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest.json OK')"
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -e
+          for f in background/*.js ui/*.js; do
+            node --check "$f"
+          done
+
+  package:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p \"require('./manifest.json').version\")" >> "$GITHUB_OUTPUT"
+      - name: Build XPI
+        run: |
+          mkdir -p dist
+          zip -r "dist/ThunderbirdVidmova-${{ steps.version.outputs.version }}.xpi" manifest.json background ui
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ThunderbirdVidmova-${{ steps.version.outputs.version }}
+          path: dist/*.xpi
