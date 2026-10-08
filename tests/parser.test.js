@@ -142,3 +142,22 @@ test("reply table recognizes refusal status without quantity",()=>{
   ]);
   assert.equal(x[0].confirmedQuantity,0);
 });
+
+
+test("parser supports partial quantity with slash",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар 6/10");
+  assert.equal(x.confirmedQuantity,6);
+});
+
+test("parser supports partial quantity with Ukrainian z",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар 6 з 10");
+  assert.equal(x.confirmedQuantity,6);
+});
