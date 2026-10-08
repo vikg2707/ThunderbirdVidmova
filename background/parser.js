@@ -22,7 +22,7 @@ function parseLine(line){
   }
  }
  for(const p of FULL_REFUSAL_PATTERNS)if(p.test(t)){
-  const n=cleanName(t.replace(/\s*[—–-:]\s*(?:відмова|відмовлено|немає|нема|відсут\w*|отказ|нет|не\s*будет|отсутств\w*|нет\s+в\s+наличии)\.?\s*$/i,""));
+  const n=cleanName(t.replace(/\s*[—–:\-]\s*(?:відмова|відмовлено|немає|нема|відсут\w*|отказ|нет|не\s*будет|отсутств\w*|нет\s+в\s+наличии)\.?\s*$/i,""));
   if(n.length>=3)return{name:n,confirmedQuantity:0,status:"full_refusal",source:t}
  }
  return null
