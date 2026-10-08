@@ -1,6 +1,6 @@
 function u8ToText(b){return new TextDecoder("utf-8").decode(b)}
 async function inflate(b){const ds=new DecompressionStream("deflate-raw"),s=new Blob([b]).stream().pipeThrough(ds);return new Uint8Array(await new Response(s).arrayBuffer())}
-function blocks(t,tag){const r=new RegExp("<"+tag+"(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</"+tag+">","gi"),a=[];let m;while((m=r.exec(t)))a.push(m[1]);return a}
+function blocks(t,tag){const r=new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">","gi"),a=[];let m;while((m=r.exec(t)))a.push(m[1]);return a}
 function attr(t,n){const m=String(t).match(new RegExp(n+'="([^"]*)"',"i"));return m?m[1]:""}
 function xmlText(s){return String(s).replace(/<[^>]+>/g,"").replace(/&#x([0-9a-f]+);/gi,(_,h)=>String.fromCodePoint(parseInt(h,16))).replace(/&#(\\d+);/g,(_,n)=>String.fromCodePoint(Number(n))).replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'")}
 function colIndex(ref){const m=String(ref).match(/^[A-Z]+/i);if(!m)return -1;let n=0;for(const ch of m[0].toUpperCase())n=n*26+ch.charCodeAt(0)-64;return n-1}
