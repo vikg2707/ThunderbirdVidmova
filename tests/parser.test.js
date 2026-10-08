@@ -61,3 +61,15 @@ test("reply table parser detects confirmed quantity",()=>{
   assert.equal(x[1].confirmedQuantity,0);
 });
 
+
+test("reply table parser extracts Morion code and refusal",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDReplyTable.rowsToReplies([["Код Моріона","Назва","Замовлено","Відвантажено","Відмова"],["12345","Товар А","10","7","3"]]);
+  assert.equal(x[0].morionCode,"12345");
+  assert.equal(x[0].orderedQuantity,10);
+  assert.equal(x[0].confirmedQuantity,7);
+  assert.equal(x[0].refusedQuantity,3);
+});
+
