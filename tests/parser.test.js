@@ -203,3 +203,42 @@ test("matcher preserves alphanumeric Morion codes",()=>{
   assert.equal(x.matched,true);
   assert.equal(x.confidence,"code");
 });
+
+
+test("supplier does not learn aliases from fuzzy high-confidence matches",async()=>{
+  const vm=require("node:vm");
+  const normalizer=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","normalizer.js"),"utf8");
+  const supplier=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","supplier.js"),"utf8");
+  const state=[{key:"supplier@test",aliases:{}}];
+  const ctx={VDNormalizer:{},VDStorage:{
+    getSuppliers:async()=>state,
+    upsertSupplier:async p=>Object.assign(state[0],p)
+  }};
+  vm.createContext(ctx);vm.runInContext(normalizer,ctx);vm.runInContext(supplier,ctx);
+  const order={supplier:"Supplier <supplier@test>",items:[{name:"Товар А",morionCode:"123"}]};
+  const learned=await ctx.VDSupplier.learnAlias(order,"Товар АА",order.items[0],"high");
+  assert.equal(learned,false);
+  assert.deepEqual(state[0].aliases,{});
+  const exact=await ctx.VDSupplier.learnAlias(order,"Товар А",order.items[0],"exact");
+  assert.equal(exact,true);
+  assert.equal(state[0].aliases["товар а"].morionCode,"123");
+});
+
+test("supplier reply format requires two observations before switching",async()=>{
+  const vm=require("node:vm");
+  const supplier=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","supplier.js"),"utf8");
+  const state=[{key:"supplier@test",replyFormat:null,replyFormatHistory:[]}];
+  const ctx={VDStorage:{
+    getSuppliers:async()=>state,
+    upsertSupplier:async p=>Object.assign(state[0],p)
+  },VDNormalizer:{normalizeProductName:x=>String(x).toLowerCase()}};
+  vm.createContext(ctx);vm.runInContext(supplier,ctx);
+  const order={supplier:"Supplier <supplier@test>"};
+  const a={name:"A"},b={name:"B"};
+  await ctx.VDSupplier.learnReplyFormat(order,a,"A");
+  assert.equal(state[0].replyFormat.signature,"A");
+  await ctx.VDSupplier.learnReplyFormat(order,b,"B");
+  assert.equal(state[0].replyFormat.signature,"A");
+  await ctx.VDSupplier.learnReplyFormat(order,b,"B");
+  assert.equal(state[0].replyFormat.signature,"B");
+});
