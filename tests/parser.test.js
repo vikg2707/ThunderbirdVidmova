@@ -182,3 +182,13 @@ test("parser handles refusal followed by partial delivery",()=>{
   assert.equal(x.name,"Товар");
   assert.equal(x.confirmedQuantity,2);
 });
+
+
+test("reply table format signature detects changed columns",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const a=[["Код Моріона","Назва","Замовлено","Відвантажено"],["123","A","5","4"]];
+  const b=[["Код Моріона","Назва","Замовлено","Кількість"],["123","A","5","4"]];
+  assert.notEqual(ctx.VDReplyTable.formatSignature(a),ctx.VDReplyTable.formatSignature(b));
+});
