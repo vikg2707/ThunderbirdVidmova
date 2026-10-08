@@ -2,7 +2,7 @@ const test=require("node:test");
 const assert=require("node:assert/strict");
 
 function parseQty(s){
-  const m=String(s).match(/(?:^|\s)(\d+)\s*(?:шт\.?|штук|од\.?|уп\.?)\b/i);
+  const m=String(s).match(/(?:^|\s)(\d+)\s*(?:шт\.?|штук|од\.?|уп\.?)(?=\s|$|[,.;:])/i);
   return m?Number(m[1]):null;
 }
 test("full refusal quantity is zero",()=>assert.equal(parseQty("Мезим №20 - отказ"),null));
