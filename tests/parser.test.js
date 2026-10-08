@@ -50,3 +50,14 @@ test("ordered and confirmed quantities can be represented",()=>{
 test("parser source file is present",()=>{
   assert.ok(require("node:fs").existsSync(require("node:path").join(__dirname,"..","background","parser.js")));
 });
+
+test("reply table parser detects confirmed quantity",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDReplyTable.rowsToReplies([["Назва","Підтверджено"],["Товар А","3"],["Товар Б","0"]]);
+  assert.equal(x.length,2);
+  assert.equal(x[0].confirmedQuantity,3);
+  assert.equal(x[1].confirmedQuantity,0);
+});
+
