@@ -7,7 +7,8 @@ const STATUS=["статус","status","результат","коментар","�
 function n(x){return String(x??"").toLowerCase().replace(/[№._-]/g," ").replace(/\s+/g," ").trim()}
 function idx(h,a){const z=h.map(n);for(const x of a){const i=z.indexOf(n(x));if(i>=0)return i}return -1}
 function num(x){const v=String(x??"").trim().replace(/\s/g,"").replace(",",".");const q=Number(v);return Number.isFinite(q)?q:null}
-function rowsToReplies(rows){
+function detectFormat(rows){if(!rows.length)return null;let hi=-1,score=-1;for(let i=0;i<Math.min(15,rows.length);i++){const s=rows[i].filter(x=>CODE.concat(NAME,ORDERED,CONF,REFUSED,STATUS).some(a=>n(x)===n(a))).length;if(s>score){score=s;hi=i}}if(score<2)return null;const h=rows[hi];return {headerRow:hi,code:idx(h,CODE),name:idx(h,NAME),ordered:idx(h,ORDERED),confirmed:idx(h,CONF),refused:idx(h,REFUSED),status:idx(h,STATUS)}}
+function rowsToReplies(rows,format){
  if(!rows.length)return[];
  let hi=-1,score=-1;
  for(let i=0;i<Math.min(15,rows.length);i++){const s=rows[i].filter(x=>CODE.concat(NAME,ORDERED,CONF,REFUSED,STATUS).some(a=>n(x)===n(a))).length;if(s>score){score=s;hi=i}}
@@ -29,4 +30,4 @@ function rowsToReplies(rows){
  }
  return out
 }
-globalThis.VDReplyTable={rowsToReplies};
+globalThis.VDReplyTable={rowsToReplies,detectFormat};
