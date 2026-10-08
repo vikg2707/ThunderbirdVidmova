@@ -1,0 +1,3 @@
+function supplierKey(author){const s=String(author||"").toLowerCase();const m=s.match(/<([^>]+)>/);return(m?m[1]:s).trim()}
+async function learnSupplier(order,attachmentNames=[]){const key=supplierKey(order.supplier);if(!key)return;const ext={};for(const n of attachmentNames){const x=String(n).toLowerCase().match(/\.(xlsx|xls|csv)$/);if(x)ext[x[1]]=(ext[x[1]]||0)+1}await VDStorage.upsertSupplier({key,displayName:order.supplier,subjectExample:order.subject,attachmentTypes:ext,itemsCount:order.items?.length||0})}
+globalThis.VDSupplier={supplierKey,learnSupplier};
