@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Read version
         id: version
-        run: echo "version=$(node -p \"require('./manifest.json').version\")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node -p 'require(\"./manifest.json\").version')" >> "$GITHUB_OUTPUT"
       - name: Build XPI
         run: |
           mkdir -p dist
