@@ -1,8 +1,12 @@
 const FULL_REFUSAL_PATTERNS=[/\bвідмова\b/i,/\bвідмовлено\b/i,/\bнемає\b/i,/\bнема\b/i,/\bвідсутн\w*/i,/\bотказ\b/i,/\bнет\b/i,/\bне\s*будет\b/i,/\bотсутств\w*/i,/\bнет\s+в\s+наличии\b/i];
 const PARTIAL_PATTERNS=[/(?:можемо\s+дати|можем\s+дать|дамо|дадим|є|есть|відвантажимо|отгрузим|підтвердимо|подтвердим|поставим)\s*[:=-]?\s*(\d+(?:[.,]\d+)?)\s*(?:шт\.?|штук|од\.?|уп\.?)?/i];
-const QTY_PATTERNS=[/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:шт\.?|штук|од\.?|уп\.?)(?=\s|$|[,.;:])/i,/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:з|із|из|\/)\s*(\d+(?:[.,]\d+)?)(?:\s|$)/i];
+const QTY_PATTERNS=[/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:шт\.?|штук|од\.?|уп\.?) (?=\s|$|[,.;:])/i,/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:з|із|из|\/)\s*(\d+(?:[.,]\d+)?)(?:\s|$)/i];
 function htmlToText(h){const d=new DOMParser().parseFromString(h||"","text/html");return(d?.body?.textContent||"").replace(/\u00a0/g," ")}
-function cleanName(s){return String(s||"").replace(/\s+/g," ").replace(/^[\s—–:;-]+|[\s—–:;-]+$/g,"").trim()}
+function cleanName(s){
+ let v=String(s||"").replace(/\s+/g," ").trim();
+ v=v.replace(/\s*[—–:\-]\s*(?:відмова|відмовлено|немає|нема|відсут\w*|отказ|нет|не\s*будет|отсутств\w*)(?:\s+\d+(?:[.,]\d+)?)?\s*[,;:]?\s*$/i,"");
+ return v.replace(/^[\s—–:\-]+|[\s—–:\-]+$/g,"").trim();
+}
 function parseLine(line){
  const t=String(line).replace(/\s+/g," ").trim();
  if(t.length<3)return null;
@@ -22,7 +26,7 @@ function parseLine(line){
   }
  }
  for(const p of FULL_REFUSAL_PATTERNS)if(p.test(t)){
-  const n=cleanName(t.replace(/\s*[—–:\-]\s*(?:відмова|відмовлено|немає|нема|відсут\w*|отказ|нет|не\s*будет|отсутств\w*|нет\s+в\s+наличии)\.?\s*$/i,""));
+  const n=cleanName(t);
   if(n.length>=3)return{name:n,confirmedQuantity:0,status:"full_refusal",source:t}
  }
  return null
