@@ -192,3 +192,14 @@ test("reply table format signature detects changed columns",()=>{
   const b=[["Код Моріона","Назва","Замовлено","Кількість"],["123","A","5","4"]];
   assert.notEqual(ctx.VDReplyTable.formatSignature(a),ctx.VDReplyTable.formatSignature(b));
 });
+
+
+test("matcher preserves alphanumeric Morion codes",()=>{
+  const vm=require("node:vm");
+  const matcher=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","matcher.js"),"utf8");
+  const normalizer=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","normalizer.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(normalizer,ctx);vm.runInContext(matcher,ctx);
+  const x=ctx.VDMatcher.matchProduct({name:"Інший товар",morionCode:"AB-001/25"},[{name:"Товар А",morionCode:"AB00125"}]);
+  assert.equal(x.matched,true);
+  assert.equal(x.confidence,"code");
+});
