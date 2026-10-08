@@ -242,3 +242,18 @@ test("supplier reply format requires two observations before switching",async()=
   await ctx.VDSupplier.learnReplyFormat(order,b,"B");
   assert.equal(state[0].replyFormat.signature,"B");
 });
+
+
+test("Morion code normalization matches separator variants",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","matcher.js"),"utf8");
+  const ctx={VDNormalizer:{normalizeProductName:x=>String(x).toLowerCase(),tokenize:x=>String(x).toLowerCase().split(/\s+/).filter(Boolean)}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  assert.equal(ctx.VDMatcher.normalizeMorionCode("123-45"),"12345");
+  assert.equal(ctx.VDMatcher.normalizeMorionCode("123/45"),"12345");
+  assert.equal(ctx.VDMatcher.normalizeMorionCode("123 45"),"12345");
+  assert.equal(ctx.VDMatcher.normalizeMorionCode("AB-001/25"),"AB00125");
+  const x=ctx.VDMatcher.matchProduct({name:"Інший",morionCode:"123/45"},[{name:"Товар",morionCode:"12345"}]);
+  assert.equal(x.matched,true);
+  assert.equal(x.confidence,"code");
+});
