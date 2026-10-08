@@ -161,3 +161,24 @@ test("parser supports partial quantity with Ukrainian z",()=>{
   const x=ctx.VDParser.parseLine("Товар 6 з 10");
   assert.equal(x.confirmedQuantity,6);
 });
+
+
+test("parser captures total in partial delivery phrase",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар — можем дать 2 из 10");
+  assert.equal(x.confirmedQuantity,2);
+  assert.equal(x.orderedQuantity,10);
+});
+
+test("parser handles refusal followed by partial delivery",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар — немає 5, дамо 2 шт");
+  assert.equal(x.name,"Товар");
+  assert.equal(x.confirmedQuantity,2);
+});
