@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "ThunderbirdVidmova",
   "description": "Автоматичний збір відмов постачальників із відповідей на замовлення.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "applications": {
     "gecko": {
       "id": "thunderbird-vidmova@algofarm.site",
@@ -22,6 +22,7 @@
       "background/matcher.js",
       "background/order-parser.js",
       "background/xlsx-reader.js",
+      "background/xls-reader.js",
       "background/csv-reader.js",
       "background/supplier.js",
       "background/order-table.js",
