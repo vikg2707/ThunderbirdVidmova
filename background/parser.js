@@ -2,7 +2,7 @@ const FULL_REFUSAL_PATTERNS=[/\bвідмова\b/i,/\bвідмовлено\b/i,/
 const PARTIAL_PATTERNS=[/(?:можемо\s+дати|можем\s+дать|дамо|дадим|є|есть|відвантажимо|отгрузим|підтвердимо|подтвердим|поставим)\s*[:=-]?\s*(\d+(?:[.,]\d+)?)\s*(?:шт\.?|штук|од\.?|уп\.?)?/i];
 const QTY_PATTERNS=[/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:шт\.?|штук|од\.?|уп\.?)(?=\s|$|[,.;:])/i,/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:з|із|из|\/)\s*(\d+(?:[.,]\d+)?)(?:\s|$)/i];
 function htmlToText(h){const d=new DOMParser().parseFromString(h||"","text/html");return(d?.body?.textContent||"").replace(/\u00a0/g," ")}
-function cleanName(s){return String(s||"").replace(/\s+/g," ").replace(/^[\s—–-:;]+|[\s—–-:;]+$/g,"").trim()}
+function cleanName(s){return String(s||"").replace(/\s+/g," ").replace(/^[\s—–:;-]+|[\s—–:;-]+$/g,"").trim()}
 function parseLine(line){
  const t=String(line).replace(/\s+/g," ").trim();
  if(t.length<3)return null;
