@@ -86,3 +86,59 @@ test("reply table format can be detected and reused",()=>{
   assert.equal(x[0].confirmedQuantity,4);
 });
 
+
+
+test("order table keeps empty columns aligned",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","order-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const rows=[
+    ["Код Моріона","","Назва","","Кількість"],
+    ["12345","","Товар А","","2"],
+    ["67890","","Товар Б","","1,5"]
+  ];
+  const x=ctx.VDOrderTable.rowsToItems(rows);
+  assert.equal(x.length,2);
+  assert.equal(x[0].morionCode,"12345");
+  assert.equal(x[0].orderedQuantity,2);
+  assert.equal(x[1].morionCode,"67890");
+  assert.equal(x[1].orderedQuantity,1.5);
+});
+
+test("order table accepts header aliases and skips invalid quantities",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","order-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const rows=[
+    ["Артикул","Найменування","Заказано"],
+    ["100","Товар А","3"],
+    ["101","Товар Б","0"],
+    ["102","Товар В","abc"]
+  ];
+  const x=ctx.VDOrderTable.rowsToItems(rows);
+  assert.equal(x.length,1);
+  assert.equal(x[0].morionCode,"100");
+});
+
+test("reply table calculates confirmed from refused quantity",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDReplyTable.rowsToReplies([
+    ["Код Моріона","Назва","Замовлено","Відмова"],
+    ["123","Товар А","10","3"]
+  ]);
+  assert.equal(x[0].confirmedQuantity,7);
+  assert.equal(x[0].refusedQuantity,3);
+});
+
+test("reply table recognizes refusal status without quantity",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDReplyTable.rowsToReplies([
+    ["Назва","Замовлено","Статус"],
+    ["Товар А","5","відмова"]
+  ]);
+  assert.equal(x[0].confirmedQuantity,0);
+});
