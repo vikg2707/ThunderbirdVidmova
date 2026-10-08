@@ -5,7 +5,8 @@ async function markMessageProcessed(messageId,orderId,result){const a=await getP
 async function isMessageProcessed(id){return(await getProcessedMessages()).some(x=>x.messageId===id)}
 const getRefusals=()=>load(DB_KEYS.refusals,[]),saveRefusals=x=>save(DB_KEYS.refusals,x),getUnmatched=()=>load(DB_KEYS.unmatched,[]);
 async function saveUnmatched(x){await save(DB_KEYS.unmatched,x.slice(-500))}
+async function resolveUnmatched(messageId,orderId,replyName,item){const a=await getUnmatched(),now=new Date().toISOString();let changed=false;for(const x of a){if(x.resolvedAt)continue;if(String(x.messageId)!==String(messageId)||String(x.orderId)!==String(orderId)||String(x.replyName)!==String(replyName))continue;x.resolvedAt=now;x.resolvedMorionCode=String(item?.morionCode||"");x.resolvedName=String(item?.name||"");changed=true}if(changed)await saveUnmatched(a);return changed}
 const getSuppliers=()=>load(DB_KEYS.suppliers,[]),getProcessingLog=()=>load(DB_KEYS.processingLog,[]);
 async function upsertSupplier(profile){const a=await getSuppliers(),k=String(profile.key||"").toLowerCase(),i=a.findIndex(x=>x.key===k);if(i>=0)a[i]={...a[i],...profile,lastSeen:new Date().toISOString()};else a.push({...profile,key:k,firstSeen:new Date().toISOString(),lastSeen:new Date().toISOString()});await save(DB_KEYS.suppliers,a)}
 async function addProcessingLog(x){const a=await getProcessingLog();a.push({...x,seenAt:x.seenAt||new Date().toISOString()});await save(DB_KEYS.processingLog,a.slice(-1000))}
-globalThis.VDStorage={getOrders,saveOrders,getProcessedMessages,markMessageProcessed,isMessageProcessed,getRefusals,saveRefusals,getUnmatched,saveUnmatched,getSuppliers,upsertSupplier,getProcessingLog,addProcessingLog};
+globalThis.VDStorage={getOrders,saveOrders,getProcessedMessages,markMessageProcessed,isMessageProcessed,getRefusals,saveRefusals,getUnmatched,saveUnmatched,resolveUnmatched,getSuppliers,upsertSupplier,getProcessingLog,addProcessingLog};
