@@ -73,3 +73,16 @@ test("reply table parser extracts Morion code and refusal",()=>{
   assert.equal(x[0].refusedQuantity,3);
 });
 
+
+test("reply table format can be detected and reused",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","reply-table.js"),"utf8");
+  const ctx={};vm.createContext(ctx);vm.runInContext(src,ctx);
+  const rows=[["Код Моріона","Назва","Замовлено","Відвантажено"],["123","A","5","4"]];
+  const f=ctx.VDReplyTable.detectFormat(rows);
+  const x=ctx.VDReplyTable.rowsToReplies(rows,f);
+  assert.equal(f.code,0);
+  assert.equal(f.confirmed,3);
+  assert.equal(x[0].confirmedQuantity,4);
+});
+
