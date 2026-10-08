@@ -1,1 +1,10 @@
-{"manifest_version":2,"name":"ThunderbirdVidmova","description":"Автоматичний збір відмов постачальників із відповідей на замовлення.","version":"0.2.0","applications":{"gecko":{"id":"thunderbird-vidmova@algofarm.site","strict_min_version":"128.0"}},"permissions":["messagesRead","accountsRead","storage","clipboardWrite"],"background":{"scripts":["background/storage.js","background/normalizer.js","background/matcher.js","background/parser.js","background/mail-monitor.js","background/background.js"]},"browser_action":{"default_title":"Відмови постачальників","default_popup":"ui/popup.html"}}
+{
+  "manifest_version":2,
+  "name":"ThunderbirdVidmova",
+  "description":"Автоматичний збір відмов постачальників із відповідей на замовлення.",
+  "version":"0.3.0",
+  "applications":{"gecko":{"id":"thunderbird-vidmova@algofarm.site","strict_min_version":"128.0"}},
+  "permissions":["messagesRead","accountsRead","storage","clipboardWrite"],
+  "background":{"scripts":["background/storage.js","background/normalizer.js","background/matcher.js","background/order-parser.js","background/parser.js","background/mail-monitor.js","background/background.js"]},
+  "browser_action":{"default_title":"Відмови постачальників","default_popup":"ui/popup.html"}
+}
