@@ -3,7 +3,7 @@ function similarity(a,b){if(a===b)return 1;if(!a||!b)return 0;return 1-levenshte
 function tokenScore(a,b){const aa=new Set(VDNormalizer.tokenize(a)),bb=new Set(VDNormalizer.tokenize(b));if(!aa.size||!bb.size)return 0;let n=0;for(const t of aa)if(bb.has(t))n++;return n/Math.max(aa.size,bb.size)}
 function codeOf(x){
  const s=String(x?.morionCode??x?.code??"").trim().toUpperCase();
- return s.replace(/[\\s._-]+/g,"");
+ return s.replace(/[\s._-]+/g,"");
 }
 function matchProduct(reply,items){
  const rn=VDNormalizer.normalizeProductName(reply?.name||reply||"");
