@@ -10,10 +10,8 @@ function num(x){const v=String(x??"").trim().replace(/\s/g,"").replace(",",".");
 function detectFormat(rows){if(!rows.length)return null;let hi=-1,score=-1;for(let i=0;i<Math.min(15,rows.length);i++){const s=rows[i].filter(x=>CODE.concat(NAME,ORDERED,CONF,REFUSED,STATUS).some(a=>n(x)===n(a))).length;if(s>score){score=s;hi=i}}if(score<2)return null;const h=rows[hi];return {headerRow:hi,code:idx(h,CODE),name:idx(h,NAME),ordered:idx(h,ORDERED),confirmed:idx(h,CONF),refused:idx(h,REFUSED),status:idx(h,STATUS)}}
 function rowsToReplies(rows,format){
  if(!rows.length)return[];
- let hi=-1,score=-1;
- for(let i=0;i<Math.min(15,rows.length);i++){const s=rows[i].filter(x=>CODE.concat(NAME,ORDERED,CONF,REFUSED,STATUS).some(a=>n(x)===n(a))).length;if(s>score){score=s;hi=i}}
- if(score<2)return[];
- const h=rows[hi],ci=idx(h,CODE),ni=idx(h,NAME),oi=idx(h,ORDERED),pi=idx(h,CONF),ri=idx(h,REFUSED),si=idx(h,STATUS);
+ const f=format||detectFormat(rows);if(!f)return[];
+ const hi=f.headerRow,ci=f.code,ni=f.name,oi=f.ordered,pi=f.confirmed,ri=f.refused,si=f.status;
  if(ni<0)return[];
  const out=[];
  for(const r of rows.slice(hi+1)){
