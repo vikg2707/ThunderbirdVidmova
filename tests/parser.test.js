@@ -12,8 +12,35 @@ test("full refusal",()=>assert.equal(Math.max(0,5-0),5));
 test("fully supplied is excluded",()=>assert.equal(Math.max(0,10-10),0));
 
 test("partial quantity phrase is parsed before refusal keyword",()=>{
-  const p={name:"Товар",confirmedQuantity:3,status:"partial"};
-  assert.deepEqual(p,{name:"Товар",confirmedQuantity:3,status:"partial"});
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар — немає 10, можемо дати 3 шт");
+  assert.equal(x.name,"Товар");
+  assert.equal(x.confirmedQuantity,3);
+  assert.equal(x.status,"partial");
+});
+
+test("quantity phrase is parsed",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар 6 шт");
+  assert.equal(x.name,"Товар");
+  assert.equal(x.confirmedQuantity,6);
+});
+
+test("full refusal is parsed",()=>{
+  const vm=require("node:vm");
+  const src=require("node:fs").readFileSync(require("node:path").join(__dirname,"..","background","parser.js"),"utf8");
+  const ctx={DOMParser:class{}};
+  vm.createContext(ctx);vm.runInContext(src,ctx);
+  const x=ctx.VDParser.parseLine("Товар — відмова");
+  assert.equal(x.name,"Товар");
+  assert.equal(x.confirmedQuantity,0);
+  assert.equal(x.status,"full_refusal");
 });
 
 test("ordered and confirmed quantities can be represented",()=>{
