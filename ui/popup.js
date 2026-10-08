@@ -1,31 +1,13 @@
-async function get(){return browser.runtime.sendMessage({type:"GET_REFUSALS"})}
-function render(items){
-  const rows=document.getElementById("rows"),stats=document.getElementById("stats");
-  rows.textContent="";
-  stats.textContent=items.length+" позицій";
-  if(!items.length){rows.innerHTML='<tr><td colspan="3" class="empty">Відмов поки немає</td></tr>';return}
-  for(const x of items){
-    const tr=document.createElement("tr");
-    for(const v of [x.name,x.morionCode,x.refusedQuantity]){
-      const td=document.createElement("td");td.textContent=v;tr.appendChild(td)
-    }
-    rows.appendChild(tr)
-  }
-}
-async function refresh(){render(await get())}
-document.getElementById("scan").onclick=async()=>{
-  const s=document.getElementById("status");s.textContent="Перевіряю пошту...";
-  try{render(await browser.runtime.sendMessage({type:"SCAN_NOW"}));s.textContent="Готово"}
-  catch(e){s.textContent="Помилка: "+e.message}
-};
-document.getElementById("copy").onclick=async()=>{
-  const items=await get();
-  await navigator.clipboard.writeText(items.map(x=>x.name+"\t"+x.morionCode+"\t"+x.refusedQuantity).join("\n"));
-  document.getElementById("status").textContent="Скопійовано"
-};
-document.getElementById("clear").onclick=async()=>{
-  if(!confirm("Очистити поточний список?"))return;
-  await browser.runtime.sendMessage({type:"CLEAR_REFUSALS"});await refresh();
-  document.getElementById("status").textContent="Список очищено"
-};
-refresh();
+let state={tab:"refusals",refusals:[],orders:[],unmatched:[]};
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function load(){state.refusals=await browser.runtime.sendMessage({type:"GET_REFUSALS"});state.orders=await browser.runtime.sendMessage({type:"GET_ORDERS"});state.unmatched=await browser.runtime.sendMessage({type:"GET_UNMATCHED"});render()}
+function render(){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===state.tab));const data=state[state.tab],s=state.tab==="refusals"?`Відмов: ${data.length} • од.: ${data.reduce((n,x)=>n+Number(x.refusedQuantity||0),0)}`:state.tab==="orders"?`Замовлень: ${data.length}`:`Невпізнаних: ${data.length}`;$("#stats").textContent=s;let h="";if(state.tab==="refusals"){h="<table><thead><tr><th>Назва</th><th>Код Моріона</th><th class='num'>Відмовлено</th><th>Впевненість</th></tr></thead><tbody>"+data.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.morionCode)}</td><td class='num danger'>${x.refusedQuantity}</td><td>${esc(x.confidence)}</td></tr>`).join("")+"</tbody></table>"}else if(state.tab==="orders"){h="<table><thead><tr><th>Дата</th><th>Постачальник</th><th>Тема</th><th class='num'>Позицій</th></tr></thead><tbody>"+data.map(x=>`<tr><td>${esc(new Date(x.date).toLocaleString("uk-UA"))}</td><td>${esc(x.supplier)}</td><td>${esc(x.subject)}</td><td class='num'>${x.items?.length||0}</td></tr>`).join("")+"</tbody></table>"}else{h="<table><thead><tr><th>Позиція у відповіді</th><th>Замовлення</th><th class='num'>Score</th><th>Дата</th></tr></thead><tbody>"+data.map(x=>`<tr><td>${esc(x.replyName)}</td><td>${esc(x.orderId)}</td><td class='num'>${Number(x.bestScore||0).toFixed(3)}</td><td>${esc(new Date(x.seenAt).toLocaleString("uk-UA"))}</td></tr>`).join("")+"</tbody></table>"}$("#content").innerHTML=h||"<div class='empty'>Немає даних</div>"}
+function currentRows(){if(state.tab==="refusals")return state.refusals.map(x=>[x.name,x.morionCode,x.refusedQuantity]);if(state.tab==="orders")return state.orders.flatMap(o=>o.items.map(i=>[o.date,o.supplier,i.name,i.morionCode,i.orderedQuantity]));return state.unmatched.map(x=>[x.replyName,x.orderId,x.bestScore,x.seenAt])}
+function csv(rows){return rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\r\n")}
+function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;render()});
+$("#scan").onclick=async()=>{$("#status").textContent="Перевірка...";await browser.runtime.sendMessage({type:"SCAN_NOW"});await load();$("#status").textContent="Готово"};
+$("#copy").onclick=async()=>{await navigator.clipboard.writeText(csv(currentRows()));$("#status").textContent="Скопійовано"};
+$("#export").onclick=()=>download(`thunderbird-vidmova-${state.tab}.csv`,csv(currentRows()));
+$("#clear").onclick=async()=>{await browser.runtime.sendMessage({type:"CLEAR_REFUSALS"});await load();$("#status").textContent="Відмови очищено"};
+load();
