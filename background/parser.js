@@ -20,7 +20,7 @@ function parseLine(line){
    const n=cleanName(t.slice(0,m.index));
    if(n.length>=3){
     const q=Number(String(m[1]).replace(",","."));
-    const total=m[2]?Number(String(m[2]).replace(",",". ")):null;
+    const total=m[2]?Number(String(m[2]).replace(",",".")):null;
     return{name:n,confirmedQuantity:q,status:total!==null?"partial":"quantity",orderedQuantity:total,source:t}
    }
   }
