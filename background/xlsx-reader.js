@@ -1,0 +1,8 @@
+function u8ToText(b){return new TextDecoder("utf-8").decode(b)}
+async function inflate(b){const ds=new DecompressionStream("deflate-raw"),s=new Blob([b]).stream().pipeThrough(ds);return new Uint8Array(await new Response(s).arrayBuffer())}
+function blocks(t,tag){const r=new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">","gi"),a=[];let m;while((m=r.exec(t)))a.push(m[1]);return a}
+function attr(t,n){const m=String(t).match(new RegExp(n+'="([^"]*)"',"i"));return m?m[1]:""}
+function xmlText(s){return String(s).replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'")}
+async function unzip(bytes){const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),out={};let p=0;while(p+30<=bytes.length){if(dv.getUint32(p,true)!==0x04034b50){p++;continue}const method=dv.getUint16(p+8,true),size=dv.getUint32(p+18,true),nl=dv.getUint16(p+26,true),el=dv.getUint16(p+28,true),name=u8ToText(bytes.slice(p+30,p+30+nl)),data=bytes.slice(p+30+nl+el,p+30+nl+el+size);out[name]=method===0?data:await inflate(data);p+=30+nl+el+size}return out}
+async function xlsxToRows(buffer){const f=await unzip(new Uint8Array(buffer)),strings=[];if(f["xl/sharedStrings.xml"])for(const si of blocks(u8ToText(f["xl/sharedStrings.xml"]),"si"))strings.push(xmlText(si));const sn=Object.keys(f).find(x=>/^xl\/worksheets\/sheet\d+\.xml$/.test(x));if(!sn)throw Error("XLSX worksheet not found");const rows=[];for(const row of blocks(u8ToText(f[sn]),"row")){const cells=[];for(const c of blocks(row,"c")){const v=(blocks(c,"v")[0]||"").trim(),t=attr(c,"t");cells.push(t==="s"?strings[Number(v)]||"":v)}if(cells.some(Boolean))rows.push(cells)}return rows}
+globalThis.VDXlsx={xlsxToRows};
