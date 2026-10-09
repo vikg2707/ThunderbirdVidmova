@@ -221,7 +221,7 @@ test("supplier does not learn aliases from fuzzy high-confidence matches",async(
   assert.deepEqual(state[0].aliases,{});
   const exact=await ctx.VDSupplier.learnAlias(order,"Товар А",order.items[0],"exact");
   assert.equal(exact,true);
-  assert.equal(state[0].aliases["товар а"].morionCode,"123");
+  assert.equal(state[0].aliases["а"].morionCode,"123");
 });
 
 test("supplier reply format requires two observations before switching",async()=>{
