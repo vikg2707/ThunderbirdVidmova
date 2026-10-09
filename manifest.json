@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "ThunderbirdVidmova",
   "description": "Автоматичний збір відмов постачальників із відповідей на замовлення.",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "applications": {
     "gecko": {
       "id": "thunderbird-vidmova@algofarm.site",
