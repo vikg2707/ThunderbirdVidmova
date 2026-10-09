@@ -16,7 +16,7 @@ function currentRows(){if(state.tab==="refusals")return state.refusals.map(x=>[x
 function csv(rows){return rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\r\n")}
 function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;render()});
-$("#scan").onclick=async()=>{$("#status").textContent="Перевірка...";await browser.runtime.sendMessage({type:"SCAN_NOW"});await load();$("#status").textContent="Готово"};
+$("#scan").onclick=async()=>{$("#status").textContent="Перевірка останніх 7 днів...";await browser.runtime.sendMessage({type:"SCAN_NOW"});await load();$("#status").textContent="Готово"};\n$("#scan-date-btn").onclick=async()=>{const date=$("#scan-date").value;if(!date){$("#status").textContent="Оберіть початкову дату";return}$("#status").textContent=`Перевірка листів з ${date}...`;const r=await browser.runtime.sendMessage({type:"SCAN_FROM_DATE",date});await load();$("#status").textContent=r?.ok?`Перевірку завершено: з ${date}`:(r?.error||"Помилка перевірки")};
 async function copyOrder(){const text=state.refusals.map(x=>`${x.morionCode}\t${x.refusedQuantity}`).join("\n");await navigator.clipboard.writeText(text);$("#status").textContent="Код Моріона + кількість скопійовано"}
 $("#copy").onclick=async()=>{await copyOrder()};
 $("#export").onclick=()=>download(`thunderbird-vidmova-${state.tab}.csv`,csv(currentRows()));
