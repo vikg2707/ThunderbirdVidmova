@@ -285,3 +285,18 @@ test("manual alias conflict switches immediately",async()=>{
   await ctx.VDSupplier.learnAlias(order,"Товар",order.items[1],"manual");
   assert.equal(state[0].aliases["товар"].morionCode,"200");
 });
+
+
+test("order attachments support tab-delimited TXT and supplier header variants",()=>{
+  const vm=require("node:vm");
+  const fs=require("node:fs");
+  const path=require("node:path");
+  const ctx={};vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,"..","background","csv-reader.js"),"utf8"),ctx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,"..","background","order-table.js"),"utf8"),ctx);
+  const rows=ctx.VDCsv.csvToRows("\uFEFFКод товара\tНаименование товара\tКоличество\n12345\tТовар А\t2\n67890\tТовар Б\t3");
+  const items=ctx.VDOrderTable.rowsToItems(rows);
+  assert.equal(items.length,2);
+  assert.equal(items[0].morionCode,"12345");
+  assert.equal(items[1].orderedQuantity,3);
+});
