@@ -300,3 +300,18 @@ test("order attachments support tab-delimited TXT and supplier header variants",
   assert.equal(items[0].morionCode,"12345");
   assert.equal(items[1].orderedQuantity,3);
 });
+
+
+test("order filter accepts only Заказ от: Альго-Фарм subjects",()=>{
+  const vm=require("node:vm");
+  const fs=require("node:fs");
+  const path=require("node:path");
+  const ctx={};vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,"..","background","order-filter.js"),"utf8"),ctx);
+  const isTarget=s=>ctx.VDOrderFilter.isTarget({subject:s});
+  assert.equal(isTarget("Заказ от: Альго-Фарм, Правди 19а Morion#153994#"),true);
+  assert.equal(isTarget("Fw: Заказ от: Альго-Фарм, Правди 19а Morion#153994#"),true);
+  assert.equal(isTarget("Re: Fwd: Заказ от: Альго-Фарм"),true);
+  assert.equal(isTarget("Замовлення Космед"),false);
+  assert.equal(isTarget("Заказ от: другого поставщика"),false);
+});
