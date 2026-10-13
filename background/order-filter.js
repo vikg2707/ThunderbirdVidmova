@@ -1,0 +1,1 @@
+globalThis.VDOrderFilter={isTarget:m=>/^\s*(?:(?:fw|fwd|re)\s*:\s*)*заказ от:\s*альго-фарм/i.test(String(m?.subject||""))};
